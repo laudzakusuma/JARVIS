@@ -30,23 +30,27 @@ class JarvisAssistant:
         """
         try:
             r = sr.Recognizer()
-            # r.pause_threshold = 1
-            # r.adjust_for_ambient_noise(source, duration=1)
             with sr.Microphone() as source:
                 print("Listening....")
-                r.energy_threshold = 4000
-                audio = r.listen(source)
+                # Adjust these settings
+                r.energy_threshold = 300  # Lower threshold (was 4000)
+                r.dynamic_energy_threshold = True
+                r.adjust_for_ambient_noise(source, duration=1)
+                audio = r.listen(source, timeout=5, phrase_time_limit=5)
             try:
                 print("Recognizing...")
                 command = r.recognize_google(audio, language='en-in').lower()
                 print(f'You said: {command}')
-            except:
-                print('Please try again')
-                command = self.mic_input()
-            return command
+                return command
+            except sr.UnknownValueError:
+                print('Could not understand audio, please try again')
+                return self.mic_input()  # Try again
+            except sr.RequestError:
+                print('Request error, please try again')
+                return self.mic_input()  # Try again
         except Exception as e:
-            print(e)
-            return  False
+            print(f"Error: {e}")
+            return False
 
 
     def tts(self, text):
